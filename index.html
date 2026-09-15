@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Scanner ISD - SD Modern El Mumtaz</title>
+
+  <!-- LIBRARY QR SCANNER -->
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+  </script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f3f6f9;
+      color: #222;
+    }
+
+    .scanner-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 30px auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.10);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    #reader {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      padding: 14px;
+      margin-top: 15px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-start {
+      background: #198754;
+      color: white;
+    }
+
+    .btn-stop {
+      background: #dc3545;
+      color: white;
+      display: none;
+    }
+
+    .status {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f1f3f5;
+      font-size: 14px;
+    }
+
+    .hasil {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #e9f7ef;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="scanner-container">
+
+    <h1>📷 Scanner ISD</h1>
+
+    <div class="subtitle">
+      SD MODERN EL MUMTAZ
+    </div>
+
+    <div id="reader"></div>
+
+    <button
+      id="btnMulai"
+      class="btn btn-start"
+      onclick="mulaiScanner()">
+
+      📷 MULAI KAMERA
+
+    </button>
+
+    <button
+      id="btnStop"
+      class="btn btn-stop"
+      onclick="stopScanner()">
+
+      ⛔ STOP KAMERA
+
+    </button>
+
+    <div
+      id="status"
+      class="status">
+
+      📷 Kamera belum diaktifkan.
+
+    </div>
+
+    <div
+      id="hasil"
+      class="hasil"
+      style="display:none;">
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    let scanner = null;
+
+
+    // =========================================
+    // MULAI SCANNER
+    // =========================================
+
+    function mulaiScanner() {
+
+      const status =
+        document.getElementById("status");
+
+      const btnMulai =
+        document.getElementById("btnMulai");
+
+      const btnStop =
+        document.getElementById("btnStop");
+
+      const hasil =
+        document.getElementById("hasil");
+
+
+      if (scanner) {
+        return;
+      }
+
+
+      hasil.style.display = "none";
+
+      status.innerText =
+        "⏳ Meminta izin kamera...";
+
+
+      scanner =
+        new Html5Qrcode("reader");
+
+
+      const config = {
+
+        fps: 10,
+
+        qrbox: {
+          width: 250,
+          height: 250
+        }
+
+      };
+
+
+      scanner.start(
+
+        {
+          facingMode: "environment"
+        },
+
+        config,
+
+
+        function(decodedText) {
+
+          console.log(
+            "QR TERBACA:",
+            decodedText
+          );
+
+
+          hasil.style.display =
+            "block";
+
+          hasil.innerText =
+            "✅ QR TERBACA:\n" +
+            decodedText;
+
+
+          status.innerText =
+            "✅ QR berhasil dibaca.";
+
+
+          stopScanner();
+
+        },
+
+
+        function(errorMessage) {
+
+          // Abaikan error scan biasa
+
+        }
+
+      )
+
+
+      .then(function() {
+
+        console.log(
+          "KAMERA AKTIF"
+        );
+
+
+        status.innerText =
+          "✅ Kamera aktif. Arahkan ke QR.";
+
+
+        btnMulai.style.display =
+          "none";
+
+
+        btnStop.style.display =
+          "block";
+
+      })
+
+
+      .catch(function(error) {
+
+        console.error(
+          "GAGAL MEMBUKA KAMERA:",
+          error
+        );
+
+
+        scanner = null;
+
+
+        status.innerText =
+          "❌ Kamera tidak dapat digunakan: " +
+          (
+            error.message ||
+            error
+          );
+
+
+        btnMulai.style.display =
+          "block";
+
+
+        btnStop.style.display =
+          "none";
+
+      });
+
+    }
+
+
+    // =========================================
+    // STOP SCANNER
+    // =========================================
+
+    function stopScanner() {
+
+      const status =
+        document.getElementById("status");
+
+      const btnMulai =
+        document.getElementById("btnMulai");
+
+      const btnStop =
+        document.getElementById("btnStop");
+
+
+      if (!scanner) {
+
+        btnMulai.style.display =
+          "block";
+
+        btnStop.style.display =
+          "none";
+
+        return;
+
+      }
+
+
+      scanner.stop()
+
+        .then(function() {
+
+          try {
+            scanner.clear();
+          } catch (e) {}
+
+          scanner = null;
+
+
+          btnMulai.style.display =
+            "block";
+
+          btnStop.style.display =
+            "none";
+
+
+          status.innerText =
+            "⛔ Kamera dihentikan.";
+
+        })
+
+
+        .catch(function(error) {
+
+          console.error(error);
+
+          scanner = null;
+
+          btnMulai.style.display =
+            "block";
+
+          btnStop.style.display =
+            "none";
+
+          status.innerText =
+            "⛔ Kamera dihentikan.";
+
+        });
+
+    }
+
+  </script>
+
+</body>
+</html>
