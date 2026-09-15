@@ -369,7 +369,7 @@
 
     }
 
-    // =========================================
+// =========================================
 // KIRIM QR KE APPS SCRIPT
 // =========================================
 
@@ -382,22 +382,77 @@ function kirimQRKeAppsScript(qrValue) {
     document.getElementById("hasil");
 
 
-  // GANTI dengan URL Web App Apps Script ISD
+  // =========================================
+  // AMBIL TOKEN DARI URL
+  // =========================================
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const token =
+    params.get("token");
+
+
+  if (!token) {
+
+    status.innerText =
+      "❌ Token scanner tidak ditemukan.";
+
+    hasil.style.display =
+      "block";
+
+    hasil.innerText =
+      "Silakan buka scanner melalui tombol BUKA SCANNER di aplikasi ISD.";
+
+    return;
+  }
+
+
+  // =========================================
+  // URL WEB APP APPS SCRIPT
+  // =========================================
+
   const URL_APPS_SCRIPT =
     "https://script.google.com/macros/s/AKfycbyS4GDiTn8zJJUdFuzTyWLrfFQ4K_LHU-5D3kdGx4lXPRaBGGqK4X7qEhrZL2PkNwJCLQ/exec";
 
 
   status.innerText =
-    "⏳ Mengirim hasil scan...";
+    "⏳ Memproses absensi...";
 
 
-  fetch(
+  hasil.style.display =
+    "block";
+
+
+  hasil.innerText =
+    "⏳ QR terbaca.\nMemproses data absensi...";
+
+
+  // =========================================
+  // KIRIM TOKEN + QR
+  // =========================================
+
+  const url =
     URL_APPS_SCRIPT +
-    "?scanner=1&qr=" +
-    encodeURIComponent(qrValue)
-  )
+    "?scanner=1" +
+    "&token=" +
+    encodeURIComponent(token) +
+    "&qr=" +
+    encodeURIComponent(qrValue);
+
+
+  fetch(url)
 
     .then(function(response) {
+
+      if (!response.ok) {
+        throw new Error(
+          "Server mengembalikan status " +
+          response.status
+        );
+      }
 
       return response.json();
 
@@ -411,23 +466,81 @@ function kirimQRKeAppsScript(qrValue) {
       );
 
 
+      // =========================================
+      // ABSENSI BERHASIL
+      // =========================================
+
       if (data.sukses) {
 
         status.innerText =
-          "✅ QR berhasil dikirim ke sistem.";
+          "✅ Absensi berhasil.";
 
         hasil.innerText =
-          "✅ QR TERBACA:\n" +
-          qrValue +
+
+          "✅ ABSENSI BERHASIL\n\n" +
+
+          "Nama Orang Tua : " +
+          (data.namaOrtu || "-") +
+
+          "\nSiswa : " +
+          (data.namaSiswa || "-") +
+
+          "\nTanggal : " +
+          (data.tanggal || "-") +
+
+          "\nJam : " +
+          (data.jam || "-") +
+
           "\n\n" +
-          "✅ " +
-          data.pesan;
 
-      } else {
+          (data.pesan || "");
 
-        status.innerText =
-          "❌ Gagal mengirim QR.";
+        return;
+      }
 
+
+      // =========================================
+      // ABSENSI GAGAL / SUDAH LENGKAP
+      // =========================================
+
+      status.innerText =
+        "❌ Absensi tidak diproses.";
+
+
+      hasil.innerText =
+
+        "❌ ABSENSI TIDAK DIPROSES\n\n" +
+
+        (data.pesan || "Terjadi kesalahan.");
+
+
+      // Jika absensi sudah lengkap
+      if (
+        data.tipe === "SELESAI"
+      ) {
+
+        hasil.innerText =
+
+          "ℹ️ ABSENSI SUDAH LENGKAP\n\n" +
+
+          "Nama Orang Tua : " +
+          (data.namaOrtu || "-") +
+
+          "\nSiswa : " +
+          (data.namaSiswa || "-") +
+
+          "\nTanggal : " +
+          (data.tanggal || "-") +
+
+          "\nJam Datang : " +
+          (data.jamDatang || "-") +
+
+          "\nJam Pulang : " +
+          (data.jamPulang || "-") +
+
+          "\n\n" +
+
+          (data.pesan || "");
       }
 
     })
@@ -439,12 +552,28 @@ function kirimQRKeAppsScript(qrValue) {
         error
       );
 
+
       status.innerText =
         "❌ Gagal terhubung ke server.";
+
+
+      hasil.style.display =
+        "block";
+
+
+      hasil.innerText =
+
+        "❌ GAGAL TERHUBUNG KE SERVER\n\n" +
+
+        (
+          error.message ||
+          error
+        );
 
     });
 
 }
+    
 
   </script>
 
