@@ -209,27 +209,31 @@
 
         function(decodedText) {
 
-          console.log(
-            "QR TERBACA:",
-            decodedText
-          );
+  console.log(
+    "QR TERBACA:",
+    decodedText
+  );
 
 
-          hasil.style.display =
-            "block";
+  hasil.style.display =
+    "block";
 
-          hasil.innerText =
-            "✅ QR TERBACA:\n" +
-            decodedText;
-
-
-          status.innerText =
-            "✅ QR berhasil dibaca.";
+  hasil.innerText =
+    "✅ QR TERBACA:\n" +
+    decodedText;
 
 
-          stopScanner();
+  status.innerText =
+    "⏳ QR terbaca. Mengirim ke sistem...";
 
-        },
+
+  stopScanner();
+
+
+  // Kirim QR ke Apps Script
+  kirimQRKeAppsScript(decodedText);
+
+},
 
 
         function(errorMessage) {
@@ -364,6 +368,83 @@
         });
 
     }
+
+    // =========================================
+// KIRIM QR KE APPS SCRIPT
+// =========================================
+
+function kirimQRKeAppsScript(qrValue) {
+
+  const status =
+    document.getElementById("status");
+
+  const hasil =
+    document.getElementById("hasil");
+
+
+  // GANTI dengan URL Web App Apps Script ISD
+  const URL_APPS_SCRIPT =
+    "https://script.google.com/macros/s/AKfycbyS4GDiTn8zJJUdFuzTyWLrfFQ4K_LHU-5D3kdGx4lXPRaBGGqK4X7qEhrZL2PkNwJCLQ/exec";
+
+
+  status.innerText =
+    "⏳ Mengirim hasil scan...";
+
+
+  fetch(
+    URL_APPS_SCRIPT +
+    "?scanner=1&qr=" +
+    encodeURIComponent(qrValue)
+  )
+
+    .then(function(response) {
+
+      return response.json();
+
+    })
+
+    .then(function(data) {
+
+      console.log(
+        "RESPON APPS SCRIPT:",
+        data
+      );
+
+
+      if (data.sukses) {
+
+        status.innerText =
+          "✅ QR berhasil dikirim ke sistem.";
+
+        hasil.innerText =
+          "✅ QR TERBACA:\n" +
+          qrValue +
+          "\n\n" +
+          "✅ " +
+          data.pesan;
+
+      } else {
+
+        status.innerText =
+          "❌ Gagal mengirim QR.";
+
+      }
+
+    })
+
+    .catch(function(error) {
+
+      console.error(
+        "ERROR KIRIM QR:",
+        error
+      );
+
+      status.innerText =
+        "❌ Gagal terhubung ke server.";
+
+    });
+
+}
 
   </script>
 
